@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const first = <T>(items: T[]): T => items[0]
+export const index = (i: number) => <T>(items: T[]): T => items[i]
+
+export const nth = (n: number) => index(n - 1)
+
+export const first = index(0)
+
+export const last = <T>(items: T[]): T => items[items.length - 1]
 
 export const constant = <T>(value: T) => () => value
 

@@ -1,13 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const first = <T>(items: T[]): T => items[0]
+
 export const constant = <T>(value: T) => () => value
+
 export const identity = <T>(value: T) => value
 
-export const not = <Args extends any[]>(
-  fn: (...args: Args) => boolean
-): ((...args: Args) => boolean) => (...args: Args) => !!fn(...args)
+export const not = <Args extends any[], T>(fn: (...args: Args) => T) => (
+  ...args: Args
+) => !fn(...args)
 
 export const equals = <T>(value: T) => (data: T): boolean => value === data
+
+export const greaterThan = (value: number) => (data: number): boolean =>
+  data > value
+
+export const greaterThanEquals = (value: number) => (data: number): boolean =>
+  data >= value
+
+export const lessThan = (value: number) => (data: number): boolean =>
+  data < value
+
+export const lessThanEquals = (value: number) => (data: number): boolean =>
+  data <= value
 
 export const or = <Args extends any[]>(
   ...options: Array<(...args: Args) => unknown>
@@ -17,39 +31,10 @@ export const and = <Args extends any[]>(
   ...options: Array<(...args: Args) => unknown>
 ) => (...args: Args): boolean => options.every(fn => fn(...args))
 
-type Condition<T, U> = (data: T) => null | "" | 0 | undefined | false | U
-
-export function cond<T, U1, U2, U3, U4>(
-  a: Condition<T, U1>,
-  b: Condition<T, U2>,
-  c: Condition<T, U3>,
-  d: Condition<T, U4>
-): (data: T) => U1 | U2 | U3 | U4
-export function cond<T, U1, U2, U3>(
-  a: Condition<T, U1>,
-  b: Condition<T, U2>,
-  c: Condition<T, U3>
-): (data: T) => U1 | U2 | U3
-export function cond<T, U1, U2>(
-  a: Condition<T, U1>,
-  b: Condition<T, U2>
-): (data: T) => U1 | U2
-export function cond<T, U1>(
-  ...conditions: Array<Condition<T, U1>>
-): (data: T) => U1 {
-  return (data: T): U1 => {
-    for (const fn of conditions) {
-      const result = fn(data)
-
-      if (result) {
-        return result
-      }
-    }
-
-    // Needs to be impossible
-    throw new Error("cond did not find a match")
-  }
-}
+export const isBetween = (a: number, b: number, inclusive = false) =>
+  inclusive
+    ? and(greaterThanEquals(a), lessThanEquals(b))
+    : and(greaterThan(a), lessThan(b))
 
 export const pluck = <U, T extends keyof U>(key: T) => (data: U): U[T] =>
   data[key]
@@ -90,3 +75,29 @@ export function apply<T>(fn: (...args: any[]) => T): (args: any) => T {
 
 export const map = <T, U>(fn: (a: T) => U) => (data: T[]): U[] => data.map(fn)
 export const chain = <T, U>(fn: (a: T) => U) => (data: T): U => fn(data)
+
+type Predicate<T> = (data: T) => unknown
+type Transform<T, U> = (data: T) => U
+type Condition<T, U> = [Predicate<T>, Transform<T, U>]
+
+export function cond<T, U>(
+  conditions: Condition<T, U>[]
+): (data: T) => U | undefined
+export function cond<T, U>(
+  conditions: Condition<T, U>[],
+  orElse: Transform<T, U>
+): (data: T) => U
+export function cond<T, U>(
+  conditions: Condition<T, U>[],
+  orElse?: Transform<T, U>
+): (data: T) => U | undefined {
+  return (data: T) => {
+    const found = conditions.find(([predicate]) => predicate(data))
+
+    if (found) {
+      return found[1](data)
+    }
+
+    return orElse ? orElse(data) : undefined
+  }
+}

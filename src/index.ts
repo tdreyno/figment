@@ -7,6 +7,8 @@ export const first = index(0)
 
 export const last = <T>(items: T[]): T => items[items.length - 1]
 
+export const rest = <T>([, ...remaining]: T[]) => remaining
+
 export const constant = <T>(value: T) => () => value
 
 export const identity = <T>(value: T) => value

@@ -312,6 +312,28 @@ type last = <T>(items: T[]) => T | undefined
 {% endtab %}
 {% endtabs %}
 
+## rest
+
+Given an array, return every item except the first.
+
+{% tabs %}
+{% tab title="Usage" %}
+
+```typescript
+rest([1, 2, 3]) // [2, 3]
+```
+
+{% endtab %}
+
+{% tab title="Type Definition" %}
+
+```typescript
+type rest = <T>(items: T[]) => T[]
+```
+
+{% endtab %}
+{% endtabs %}
+
 ## greaterThan
 
 Create a predicate which checks whether a value is greater than a number.

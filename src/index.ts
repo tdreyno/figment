@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const index = (i: number) => <T>(items: T[]): T => items[i]
+export const index = (i: number) => <T>(items: T[]): T | undefined => items[i]
 
 export const nth = (n: number) => index(n - 1)
 

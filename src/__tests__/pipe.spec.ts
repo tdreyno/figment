@@ -5,7 +5,7 @@ describe("pipe", () => {
     const maths = pipe(
       (a: number) => a + 5,
       (b: number) => b - 2,
-      (c: number) => c / 4
+      (c: number) => c / 4,
     )
 
     expect(maths(5)).toBe(2)

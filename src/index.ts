@@ -57,16 +57,16 @@ export function pipe<A, B, C, D, E>(
   a: (data: A) => B,
   b: (data: B) => C,
   c: (data: C) => D,
-  d: (data: D) => E
+  d: (data: D) => E,
 ): (data: A) => E
 export function pipe<A, B, C, D>(
   a: (data: A) => B,
   b: (data: B) => C,
-  c: (data: C) => D
+  c: (data: C) => D,
 ): (data: A) => D
 export function pipe<A, B, C>(
   a: (data: A) => B,
-  b: (data: B) => C
+  b: (data: B) => C,
 ): (data: A) => C
 export function pipe(...fns: ((data: any) => any)[]) {
   return (data: any) => fns.reduce((sum, fn) => fn(sum), data)
@@ -75,7 +75,7 @@ export function pipe(...fns: ((data: any) => any)[]) {
 export function apply<T, A>(fn: (a: A) => T): (data: [A]) => T
 export function apply<T, A, B>(fn: (a: A, b: B) => T): (data: [A, B]) => T
 export function apply<T, A, B, C>(
-  fn: (a: A, b: B, c: C) => T
+  fn: (a: A, b: B, c: C) => T,
 ): (data: [A, B, C]) => T
 export function apply<T>(fn: (...args: any[]) => T): (args: any) => T {
   return (args: any) => fn(...args)
@@ -89,15 +89,15 @@ type Transform<T, U> = (data: T) => U
 type Condition<T, U> = [Predicate<T>, Transform<T, U>]
 
 export function cond<T, U>(
-  conditions: Condition<T, U>[]
+  conditions: Condition<T, U>[],
 ): (data: T) => U | undefined
 export function cond<T, U>(
   conditions: Condition<T, U>[],
-  orElse: Transform<T, U>
+  orElse: Transform<T, U>,
 ): (data: T) => U
 export function cond<T, U>(
   conditions: Condition<T, U>[],
-  orElse?: Transform<T, U>
+  orElse?: Transform<T, U>,
 ): (data: T) => U | undefined {
   return (data: T) => {
     const found = conditions.find(([predicate]) => predicate(data))

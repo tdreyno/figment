@@ -5,7 +5,7 @@ describe("cond", () => {
     const searchNumbers = cond([
       [lessThanEquals(5), constant("<=5")],
       [lessThanEquals(10), constant("6-10")],
-      [equals(11), constant("11")]
+      [equals(11), constant("11")],
     ])
 
     expect(searchNumbers(0)).toBe("<=5")
@@ -19,9 +19,9 @@ describe("cond", () => {
       [
         [lessThanEquals(5), constant("<=5")],
         [lessThanEquals(10), constant("6-10")],
-        [equals(11), constant("11")]
+        [equals(11), constant("11")],
       ],
-      constant("unknown")
+      constant("unknown"),
     )
 
     expect(searchNumbers(0)).toBe("<=5")

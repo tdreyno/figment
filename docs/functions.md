@@ -179,11 +179,9 @@ Basically a functional switch statement. Run several predicates to find the corr
 
 ```typescript
 const detectRange = cond(
-  [
-    [lessThan(0), () => "Negative"],
-    [lessThan(100), () => "Less than 100"]
-  ],
-  () => "Greater than 100"
+  [lessThan(0), () => "Negative"],
+  [lessThan(100), () => "Less than 100"],
+  () => "Greater than 100",
 )
 
 detectRange(101)
@@ -453,7 +451,7 @@ isBetween5And10Inclusive(1)
 type isBetween = (
   a: number,
   b: number,
-  inclusive?: boolean
+  inclusive?: boolean,
 ) => (data: number) => boolean
 ```
 
@@ -517,7 +515,7 @@ Create a function runs a series of functions in order, passing the result of eac
 const incrementToStringAndRepeat = pipe(
   (a: number) => a + 1,
   (b: number) => b.toString(),
-  (c: string) => c + c
+  (c: string) => c + c,
 )
 
 incrementToStringAndRepeat(100)

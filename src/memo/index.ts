@@ -1,179 +1,157 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { identity, isPlainObject, isUndefined, not } from "../core/index"
-
-interface TreeNode<T> {
-  children: Map<any, TreeNode<T>> | null
-  value: T | undefined
-}
-
-function makeNode<T>(): TreeNode<T> {
-  const o = Object.create(null)
-
-  o.children = new Map<any, TreeNode<T>>()
-  o.value = undefined
-
-  return o
-}
+import * as TreeNode from "./TreeNode"
+import {
+  identity,
+  isPlainObject,
+  isUndefined,
+  not,
+  cond,
+  isA,
+  or,
+  isArray_,
+  pipe,
+  and,
+  knownIdentity,
+  known,
+  loop,
+  greaterThanEquals,
+  constant,
+  Recur,
+} from "../core/index"
 
 const mutableObjectCache = new Map<object | any[], string>()
+const cacheGet = (key: any) => mutableObjectCache.get(key)
+const cacheSet = <V extends string>(value: V) => (key: any): V =>
+  mutableObjectCache.set(key, value) && value
+const nextKey = () => mutableObjectCache.size.toString()
 
-function stringifyIfNecessary<T>(
-  o: T,
-  useEqualityForMutableObjects: boolean,
-): T | string {
-  if (
-    Array.isArray(o) ||
-    isPlainObject(o) ||
-    o instanceof Map ||
-    o instanceof Set
-  ) {
-    if (useEqualityForMutableObjects) {
-      const stringKey = mutableObjectCache.get(o as any)
+const stringifyIfNecessary = <T>(useEqualityForMutableObjects: boolean) =>
+  cond<T, T | string>(
+    // Non-serializable type
+    [not(or(isArray_, isPlainObject, isA(Map), isA(Set))), identity],
 
-      if (stringKey) {
-        return stringKey
-      }
+    // If we are using equality for cache key and the value is in cache
+    [and(useEqualityForMutableObjects, cacheGet), known(cacheGet)],
 
-      const nextStringKey = mutableObjectCache.size.toString()
-      mutableObjectCache.set(o as any, nextStringKey)
+    // If we are using equality for cache key and the value is not in cache
+    [and(useEqualityForMutableObjects, not(cacheGet)), cacheSet(nextKey())],
 
-      return nextStringKey
-    }
+    // If not using equality AND its a Map/Set
+    [
+      or(isA(Map), isA(Set)),
+      pipe(knownIdentity<any>(), Array.from, JSON.stringify),
+    ],
 
-    if (o instanceof Map || o instanceof Set) {
-      return JSON.stringify(Array.from(o))
-    }
+    // Unknown, attempt to stringify
+    JSON.stringify,
+  )
 
-    return JSON.stringify(o)
-  }
-
-  return o
+interface CacheObj<T> {
+  root: TreeNode.TreeNode<string, T>
+  useEqualityForMutableObjects: boolean
 }
 
-class Cache<T> {
-  root = makeNode<T>()
-  useEqualityForMutableObjects = false
+const get = <T>(args: any[]) => (cache: CacheObj<T>) =>
+  loop<[TreeNode.TreeNode<string, T>, number], T | undefined>(
+    (recur, previousNode, i) =>
+      cond<
+        number,
+        T | undefined | Recur<[TreeNode.TreeNode<string, T>, number]>
+      >(
+        // If the loop is done, return the current node value
+        [
+          greaterThanEquals(args.length),
+          constant(TreeNode.value(previousNode)),
+        ],
 
-  constructor(useEqualityForMutableObjects: boolean) {
-    this.useEqualityForMutableObjects = useEqualityForMutableObjects
-  }
+        // Otherwise,
+        pipe(
+          // Get the data by index
+          constant(args[i]),
 
-  has(args: any[]): boolean {
-    return not(isUndefined)(this.get(args))
-  }
+          // Convert to string key if necessary
+          stringifyIfNecessary(cache.useEqualityForMutableObjects),
 
-  get(args: any[]): T | undefined {
-    let previousNode = this.root
+          // Check if the key is in the tree.
+          cond(
+            // If not, return undefined
+            [
+              (key: string | T) => !TreeNode.has(key, previousNode),
+              constant(undefined),
+            ],
 
-    // tslint:disable-next-line: prefer-for-of
-    for (let i = 0; i < args.length; i++) {
-      const arg = args[i]
-      const key = stringifyIfNecessary(arg, this.useEqualityForMutableObjects)
+            // If yes,
+            pipe(
+              // Get the next node
+              (key: string | T) => TreeNode.get(key, previousNode),
 
+              // See if the next node exists
+              cond(
+                // If not, return undefined
+                [isUndefined, constant(undefined)],
+
+                // If so, continue recursing
+                node => recur(node!, i + 1),
+              ),
+            ),
+          ),
+        ),
+      )(i),
+  )(cache.root, 0)
+
+const has = <T>(args: any[]) => pipe(get<T>(args), not(isUndefined))
+
+const set = <T>(args: any[], value: T) => (cache: CacheObj<T>): void => {
+  let previousNode = cache.root
+
+  // tslint:disable-next-line: prefer-for-of
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    const key = stringifyIfNecessary(cache.useEqualityForMutableObjects)(arg)
+
+    let node
+
+    if (!TreeNode.isEmpty(previousNode)) {
       // Found in tree, continue
-      if (previousNode.children && previousNode.children.has(key)) {
-        const node = previousNode.children.get(key)
-
-        if (node) {
-          previousNode = node
-        }
+      if (TreeNode.has(key, previousNode)) {
+        node = TreeNode.get(key, previousNode)
       } else {
-        return undefined
+        node = TreeNode.make<string, T>()
+
+        // Mutates node
+        TreeNode.set(key, node, previousNode)
+      }
+
+      if (node) {
+        previousNode = node
       }
     }
-
-    return previousNode.value
   }
 
-  set(args: any[], value: T): void {
-    let previousNode = this.root
-
-    // tslint:disable-next-line: prefer-for-of
-    for (let i = 0; i < args.length; i++) {
-      const arg = args[i]
-      const key = stringifyIfNecessary(arg, this.useEqualityForMutableObjects)
-
-      let node
-
-      if (previousNode.children) {
-        // Found in tree, continue
-        if (previousNode.children.has(key)) {
-          node = previousNode.children.get(key)
-        } else {
-          node = makeNode<T>()
-          previousNode.children = previousNode.children.set(key, node)
-        }
-
-        if (node) {
-          previousNode = node
-        }
-      }
-    }
-
-    previousNode.value = value
-  }
-
-  toJS(): object {
-    function serialize(data: any): any {
-      if (Array.isArray(data)) {
-        return data.map(serialize)
-      }
-
-      if (isPlainObject(data)) {
-        return Object.keys(data).reduce(
-          (sum, k: string) => {
-            sum[k] = serialize(data[k])
-
-            return sum
-          },
-          {} as {
-            [key: string]: any
-          },
-        )
-      }
-
-      if (data && data.toJS) {
-        return data.toJS()
-      }
-
-      return data
-    }
-
-    return serialize(this.root)
-  }
-
-  toString() {
-    return JSON.stringify(this.toJS(), undefined, 2)
-  }
+  TreeNode.setValue(value, previousNode)
 }
 
-export function memoize<T extends (...args: any[]) => any>(
+export const memoize = <T extends (...args: any[]) => any>(
   fn: T,
   useEqualityForMutableObjects = false,
-): T {
-  const cache = new Cache<T>(useEqualityForMutableObjects)
+): T => {
+  const cache: CacheObj<T> = {
+    root: TreeNode.make<string, T>(),
+    useEqualityForMutableObjects,
+  }
 
   function memoized(...args: any[]) {
-    if (cache.has(args)) {
-      return cache.get(args)
+    if (has(args)(cache)) {
+      return get(args)(cache)
     }
 
     const result = fn(...args)
 
-    cache.set(args, result)
+    set(args, result)(cache)
 
     return result
   }
 
   return memoized as any
 }
-
-export function maybeCallback<T>(fn?: T | null) {
-  return fn || identity
-}
-
-export function basicAlways<T>(value: T): () => T {
-  return () => value
-}
-
-export const always = memoize(basicAlways)

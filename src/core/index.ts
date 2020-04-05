@@ -1,4 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+export const isUndefined = (data: unknown): data is undefined =>
+  data === undefined
+
+export const isFunction = (data: unknown): data is Function =>
+  typeof data === "function"
+
 export const index = (i: number) => <T>(items: T[]): T | undefined => items[i]
 
 export const nth = (n: number) => index(n - 1)
@@ -12,6 +19,9 @@ export const rest = <T>([, ...remaining]: T[]) => remaining
 export const constant = <T>(value: T) => () => value
 
 export const identity = <T>(value: T) => value
+export const knownIdentity = <T>() => (value: unknown) => value as T
+export const known = <T, U>(fn: (value: T) => U | undefined) => (value: T): U =>
+  fn(value) as U
 
 export const not = <Args extends any[], T>(fn: (...args: Args) => T) => (
   ...args: Args
@@ -31,13 +41,21 @@ export const lessThan = (value: number) => (data: number): boolean =>
 export const lessThanEquals = (value: number) => (data: number): boolean =>
   data <= value
 
-export const or = <Args extends any[]>(
-  ...options: Array<(...args: Args) => unknown>
-) => (...args: Args): boolean => options.some(fn => fn(...args))
+export const or = <T>(...options: Array<((value: T) => unknown) | unknown>) => (
+  value: T,
+): boolean =>
+  options.some(fnOrBool => (isFunction(fnOrBool) ? fnOrBool(value) : fnOrBool))
 
 export const and = <Args extends any[]>(
-  ...options: Array<(...args: Args) => unknown>
-) => (...args: Args): boolean => options.every(fn => fn(...args))
+  ...options: Array<((...args: Args) => unknown) | unknown>
+) => (...args: Args): boolean =>
+  options.every(fnOrBool =>
+    isFunction(fnOrBool)
+      ? fnOrBool(...args)
+      : options.every(fnOrBool =>
+          isFunction(fnOrBool) ? fnOrBool(...args) : fnOrBool,
+        ),
+  )
 
 export const isBetween = (a: number, b: number, inclusive = false) =>
   inclusive
@@ -68,6 +86,7 @@ export function pipe<A, B, C>(
   a: (data: A) => B,
   b: (data: B) => C,
 ): (data: A) => C
+export function pipe<A, B>(a: (data: A) => B): (data: A) => B
 export function pipe(...fns: ((data: any) => any)[]) {
   return (data: any) => fns.reduce((sum, fn) => fn(sum), data)
 }
@@ -84,31 +103,58 @@ export function apply<T>(fn: (...args: any[]) => T): (args: any) => T {
 export const map = <T, U>(fn: (a: T) => U) => (data: T[]): U[] => data.map(fn)
 export const chain = <T, U>(fn: (a: T) => U) => (data: T): U => fn(data)
 
-type Predicate<T> = (data: T) => unknown
+type Predicate<T> = unknown | ((data: T) => unknown)
 type Transform<T, U> = (data: T) => U
 type Condition<T, U> = [Predicate<T>, Transform<T, U>]
 
 export function cond<T, U>(
-  conditions: Condition<T, U>[],
-): (data: T) => U | undefined
-export function cond<T, U>(
-  conditions: Condition<T, U>[],
+  a: Condition<T, U>,
+  b: Condition<T, U>,
+  c: Condition<T, U>,
+  d: Condition<T, U>,
   orElse: Transform<T, U>,
 ): (data: T) => U
 export function cond<T, U>(
-  conditions: Condition<T, U>[],
-  orElse?: Transform<T, U>,
-): (data: T) => U | undefined {
-  return (data: T) => {
-    const found = conditions.find(([predicate]) => predicate(data))
+  a: Condition<T, U>,
+  b: Condition<T, U>,
+  c: Condition<T, U>,
+  d: Condition<T, U>,
+  e: Condition<T, U>,
+  orElse: Transform<T, U>,
+): (data: T) => U
+export function cond<T, U>(
+  a: Condition<T, U>,
+  b: Condition<T, U>,
+  c: Condition<T, U>,
+  orElse: Transform<T, U>,
+): (data: T) => U
+export function cond<T, U>(
+  a: Condition<T, U>,
+  b: Condition<T, U>,
+  orElse: Transform<T, U>,
+): (data: T) => U
+export function cond<T, U>(
+  a: Condition<T, U>,
+  orElse: Transform<T, U>,
+): (data: T) => U
+export function cond<T, U>(orElse: Transform<T, U>): (data: T) => U
+export function cond<T, U>(
+  ...conditions: (Condition<T, U> | Transform<T, U>)[]
+): (data: T) => U {
+  const orElse = conditions.pop() as Transform<T, U>
 
-    if (found) {
-      return found[1](data)
-    }
+  return (data: T): U => {
+    const found = (conditions as Condition<T, U>[]).find(([predicate]) =>
+      isFunction(predicate) ? predicate(data) : data,
+    )
 
-    return orElse ? orElse(data) : undefined
+    return found ? found[1](data) : orElse(data)
   }
 }
+
+export const if_ = <T, R>(truthy: (value: T) => R, falsey: (value: T) => R) => (
+  value: T,
+): R => (value ? truthy(value) : falsey(value))
 
 export function isPlainObject(obj: unknown) {
   // Basic check for Type object that's not null
@@ -128,4 +174,50 @@ export function isPlainObject(obj: unknown) {
   return false
 }
 
-export const isUndefined = (data: unknown) => data === undefined
+export const let_ = <Args extends any[], R>(
+  expression: (...vars: Args) => R,
+) => (vars: Args): R => expression(...vars)
+
+export const withDefault = <T>(fallback: () => T) => (
+  value: T | undefined,
+): T => (isUndefined(value) ? fallback() : value) as Exclude<T, undefined>
+
+export const isA = <K extends Function>(klass: K) => (
+  value: unknown,
+): value is K => value instanceof klass
+
+export const isArray_ = <T extends any[]>(value: unknown): value is T =>
+  Array.isArray(value)
+
+export type Recur<Args extends any[]> = {
+  type: "recur"
+  args: Args
+}
+
+const isRecur = <Args extends any[]>(
+  data: Recur<Args> | any,
+): data is Recur<Args> => data && data.type === "recur"
+
+export const recur = <Args extends any[]>(...args: Args): Recur<Args> => ({
+  type: "recur",
+  args,
+})
+
+export const loop = <Args extends any[], R>(
+  fn: (
+    recur_: (...args: Args) => Recur<Args>,
+    ...args: Args
+  ) => R | Recur<Args>,
+) => (...args: Args): R => {
+  let lastArgs: Args = args
+  while (true) {
+    const result = fn(recur as (...args: Args) => Recur<Args>, ...lastArgs)
+
+    if (isRecur(result)) {
+      lastArgs = (result.args as unknown) as Args
+      continue
+    }
+
+    return result
+  }
+}

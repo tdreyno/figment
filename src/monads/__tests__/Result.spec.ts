@@ -9,7 +9,9 @@ import {
   orElse,
   isOk,
   isError,
+  fromMaybe,
 } from "../Result"
+import { Nothing, Just } from "../Maybe"
 
 describe("Result", () => {
   test("Ok", () => {
@@ -63,6 +65,10 @@ describe("Result", () => {
     expect(chain((v: number) => Ok(v * 2))(Ok(5))).toEqual(Ok(10)))
   test("chain(Err)", () =>
     expect(chain(jest.fn())(Err("whoops"))).toEqual(Err("whoops")))
+
+  test("fromMaybe(Nothing)", () =>
+    expect(fromMaybe(Nothing())).toEqual(Err(null)))
+  test("fromMaybe(Just)", () => expect(fromMaybe(Just(5))).toEqual(Ok(5)))
 
   test("orElse", () => expect(orElse(() => 10)(Err("whoops"))).toEqual(Ok(10)))
 

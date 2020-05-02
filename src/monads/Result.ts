@@ -9,6 +9,7 @@ import {
   isLeft,
   isRight,
 } from "./Either"
+import { Maybe, fold as maybeFold } from "./Maybe"
 
 export type Ok<B> = Right<B>
 export type Err<A> = Left<A>
@@ -30,6 +31,9 @@ export const cata = <A, B, U>(handlers: {
 
 export const fold = <A, B, U>(errorFn: (a: A) => U, okFn: (b: B) => U) =>
   fold_(errorFn, okFn) as (result: Result<A, B>) => U
+
+export const fromMaybe = <B>(maybe: Maybe<B>) =>
+  maybeFold(() => Err(null), Ok)(maybe) as Result<null, B>
 
 // Chain
 export const chain = <A, B, U>(fn: (a: B) => Result<A, U>) =>

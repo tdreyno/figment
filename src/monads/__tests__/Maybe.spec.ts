@@ -6,7 +6,6 @@ import {
   empty,
   of,
   fromNullable,
-  bimap,
   map,
   chain,
   orElse,
@@ -19,7 +18,7 @@ describe("Maybe", () => {
     const J = jest.fn()
     const N = jest.fn()
 
-    fold(J, N)(Just(5))
+    fold(N, J)(Just(5))
 
     expect(J).toBeCalledWith(5)
     expect(N).not.toHaveBeenCalled()
@@ -29,7 +28,7 @@ describe("Maybe", () => {
     const J = jest.fn()
     const N = jest.fn()
 
-    fold(J, N)(Nothing())
+    fold(N, J)(Nothing())
 
     expect(J).not.toHaveBeenCalled()
     expect(N).toHaveBeenCalled()
@@ -60,22 +59,6 @@ describe("Maybe", () => {
 
     expect(J).not.toHaveBeenCalled()
     expect(N).toHaveBeenCalled()
-  })
-
-  test("bimap(Just)", () => {
-    const N = jest.fn()
-
-    expect(bimap((v: number) => v * 2, N)(Just(5))).toEqual(Just(10))
-
-    expect(N).not.toHaveBeenCalled()
-  })
-
-  test("bimap(Nothing)", () => {
-    const J = jest.fn()
-
-    expect(bimap(J, () => 10)(Nothing())).toEqual(Just(10))
-
-    expect(J).not.toHaveBeenCalled()
   })
 
   test("map(Just)", () =>

@@ -11,7 +11,9 @@ import {
   orElse,
   isJust,
   isNothing,
+  fromResult,
 } from "../Maybe"
+import { Err, Ok } from "../Result"
 
 describe("Maybe", () => {
   test("Just", () => {
@@ -40,6 +42,10 @@ describe("Maybe", () => {
   test("fromNullable(null)", () =>
     expect(fromNullable(null)).toEqual(Nothing()))
   test("fromNullable(5)", () => expect(fromNullable(5)).toEqual(Just(5)))
+
+  test("fromResult(Err)", () =>
+    expect(fromResult(Err("whoops"))).toEqual(Nothing()))
+  test("fromResult(Ok)", () => expect(fromResult(Ok(5))).toEqual(Just(5)))
 
   test("cata(Just)", () => {
     const J = jest.fn()

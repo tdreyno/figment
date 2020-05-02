@@ -9,9 +9,10 @@ import {
   isLeft,
   isRight,
 } from "./Either"
+import { Result, fold as resultFold } from "./Result"
 
-type Just<T> = Right<T>
-type Nothing<T = unknown> = Left<null>
+export type Just<T> = Right<T>
+export type Nothing<T = unknown> = Left<null>
 export type Maybe<T> = Nothing<T> | Just<T>
 
 export const Just = <T>(value: T): Maybe<T> => Right(value)
@@ -34,6 +35,9 @@ export const cata = <T, U>(handlers: { Nothing: () => U; Just: (v: T) => U }) =>
 
 export const fold = <T, U>(nothingFn: () => U, justFn: (v: T) => U) =>
   fold_<null, T, U>(nothingFn, justFn) as (maybe: Maybe<T>) => U
+
+export const fromResult = <A, B>(result: Result<A, B>) =>
+  resultFold(Nothing, Just)(result) as Maybe<B>
 
 // Chain
 export const chain = <T, U>(fn: (a: T) => Maybe<U>) =>

@@ -1,4 +1,4 @@
-import { Reader, map, flatMap, contramap } from "../Reader"
+import { Reader, map, chain, contramap } from "../Reader"
 import { pipe, pluck } from "../../core"
 
 type DB = string
@@ -46,8 +46,8 @@ describe("Reader", () => {
     ).toEqual({ id: "123", name: "Thomas", db: "other" })
   })
 
-  test("flatMap", () => {
-    const getAndSaveUser = pipe(getUser, flatMap(saveUser))
+  test("chain", () => {
+    const getAndSaveUser = pipe(getUser, chain(saveUser))
     expect(getAndSaveUser("123")(DB)).toEqual({
       id: "123",
       name: "Thomas",

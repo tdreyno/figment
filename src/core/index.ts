@@ -3,6 +3,8 @@
 export const isUndefined = (data: unknown): data is undefined =>
   data === undefined
 
+export const isNull = (data: unknown): data is null => data === null
+
 export const isFunction = (data: unknown): data is Function =>
   typeof data === "function"
 
@@ -176,7 +178,7 @@ export function isPlainObject(obj: unknown) {
 
 export const let_ = <Args extends any[], R>(
   expression: (...vars: Args) => R,
-) => (vars: Args): R => expression(...vars)
+) => (...vars: Args): R => expression(...vars)
 
 export const withDefault = <T>(fallback: () => T) => (
   value: T | undefined,

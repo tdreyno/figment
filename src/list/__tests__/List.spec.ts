@@ -16,18 +16,19 @@ import {
   reduce,
   last,
   removeLast,
+  Nil,
 } from "../List"
 
 describe("List", () => {
   test("empty", () => {
-    expect(head(empty())).toBeUndefined()
-    expect(tail(empty())).toBeUndefined()
+    expect(head(empty())).toBe(Nil)
+    expect(tail(empty())).toBe(Nil)
   })
 
   test("of", () => {
     const hasFive = of(5)
     expect(head(hasFive)).toBe(5)
-    expect(tail(hasFive)).toBeUndefined()
+    expect(tail(hasFive)).toBe(Nil)
   })
 
   test("fromArray", () => {

@@ -48,8 +48,6 @@ export const reduce = <T, A>(fn: (acc: T, a: A) => T) => (acc: T) => (
 export const toArray = <T>(list: List<T>): T[] =>
   reduce<T[], T>((acc, item) => {
     acc.push(item)
-    console.log("hey", item, acc)
-
     return acc
   })([])(list)
 

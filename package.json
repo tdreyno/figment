@@ -82,7 +82,7 @@
     "terser": "^4.7.0",
     "ts-jest": "^25.5.1",
     "ts-toolbelt": "^6.9.4",
-    "typescript": "^3.9.3"
+    "typescript": "^3.9.5"
   },
   "dependencies": {},
   "peerDependencies": {},

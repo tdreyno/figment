@@ -180,6 +180,19 @@ export const let_ = <Args extends any[], R>(
   expression: (...vars: Args) => R,
 ) => (...vars: Args): R => expression(...vars)
 
+export function let2_<A, R>(a: A, expression: (a: A) => R): R
+export function let2_<A, B, R>(a: A, b: B, expression: (a: A, b: B) => R): R
+export function let2_<A, B, C, R>(
+  a: A,
+  b: B,
+  c: C,
+  expression: (a: A, b: B, c: C) => R,
+): R
+export function let2_<Args extends any[], R>(...args: Args): R {
+  const [expression, ...reversedRemainging] = args.reverse()
+  return expression(...reversedRemainging.reverse())
+}
+
 export const withDefault = <T>(fallback: () => T) => (
   value: T | undefined,
 ): T => (isUndefined(value) ? fallback() : value) as Exclude<T, undefined>

@@ -11,8 +11,8 @@ import {
 } from "./Either"
 import { Result, fold as resultFold } from "./Result"
 
-export type Just<T> = Right<T>
-export type Nothing<T = unknown> = Left<null>
+export type Just<T> = Right<T, null>
+export type Nothing<T = unknown> = Left<null, T>
 export type Maybe<T> = Nothing<T> | Just<T>
 
 export const Just = <T>(value: T): Maybe<T> => Right(value)

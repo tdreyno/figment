@@ -1,25 +1,31 @@
 import { pipe } from "../core/index"
 
-export interface Left<A> {
+export interface EitherFold<A, B> {
+  fold: <U>(leftFn: (v: A) => U, rightFn: (v: B) => U) => U
+}
+
+export interface Left<A, B> extends EitherFold<A, B> {
   readonly type: "Left"
   readonly value: A
 }
 
-export interface Right<B> {
+export interface Right<B, A> extends EitherFold<A, B> {
   readonly type: "Right"
   readonly value: B
 }
 
-export type Either<A, B> = Left<A> | Right<B>
+export type Either<A, B> = Left<A, B> | Right<B, A>
 
 export const Left = <A, B = unknown>(value: A): Either<A, B> => ({
   type: "Left",
   value,
+  fold: <U>(leftFn: (v: A) => U) => leftFn(value),
 })
 
 export const Right = <B, A = unknown>(value: B): Either<A, B> => ({
   type: "Right",
   value,
+  fold: <U>(_leftFn: (v: A) => U, rightFn: (v: B) => U) => rightFn(value),
 })
 
 export const cata = <A, B, R>(handlers: {
@@ -53,8 +59,8 @@ export const chain = <A, B, B2>(fn: (a: B) => Either<A, B2>) =>
 export const map = <A, B, B2>(fn: (a: B) => B2) =>
   chain<A, B, B2>(pipe<B, B2, Either<A, B2>>(fn, Right))
 
-export const isLeft = <A, B>(either: Either<A, B>): either is Left<A> =>
+export const isLeft = <A, B>(either: Either<A, B>): either is Left<A, B> =>
   either.type === "Left"
 
-export const isRight = <A, B>(either: Either<A, B>): either is Right<B> =>
+export const isRight = <A, B>(either: Either<A, B>): either is Right<B, A> =>
   either.type === "Right"

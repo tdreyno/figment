@@ -33,7 +33,7 @@ export const fold = <A, B, U>(errorFn: (a: A) => U, okFn: (b: B) => U) =>
   fold_(errorFn, okFn) as (result: Result<A, B>) => U
 
 export const fromMaybe = <B>(maybe: Maybe<B>) =>
-  maybeFold(() => Err(null), Ok)(maybe) as Result<null, B>
+  maybeFold(() => Err(null), Ok)(maybe)
 
 // Chain
 export const chain = <A, B, U>(fn: (a: B) => Result<A, U>) =>

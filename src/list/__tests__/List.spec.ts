@@ -17,7 +17,9 @@ import {
   last,
   removeLast,
   Nil,
+  filterMap,
 } from "../List"
+import { Maybe as M } from "../../monads/index"
 
 describe("List", () => {
   test("empty", () => {
@@ -46,6 +48,14 @@ describe("List", () => {
     const list = fromArray([1, 2, 3, 4])
     const mappedList = filter((a: number) => a % 2 === 0)(list)
     expect(toArray(mappedList)).toEqual([2, 4])
+  })
+
+  test("filterMap", () => {
+    const list = fromArray([1, 2, 3, 4, 5])
+    const mappedList = filterMap((a: number) =>
+      a > 2 && a < 5 ? M.Just(a * 5) : M.Nothing<number>(),
+    )(list)
+    expect(toArray(mappedList)).toEqual([15, 20])
   })
 
   test("some", () => {

@@ -84,7 +84,9 @@
     "ts-toolbelt": "^6.6.2",
     "typescript": "^3.8.3"
   },
-  "dependencies": {},
+  "dependencies": {
+    "hkts": "^0.3.1"
+  },
   "peerDependencies": {},
   "config": {
     "commitizen": {

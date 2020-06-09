@@ -4474,6 +4474,11 @@ has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
+hkts@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/hkts/-/hkts-0.3.1.tgz#444e33ae89138b46cbdd669d4cfed358ec0dd7db"
+  integrity sha512-mwyHknnq1d7dRZVu1easa4CZc4tRqSQ9RtliJS9Wh3vl4PCHxDHZIuztSeZX7focK2jI7rpiYyKRLnE285kdBw==
+
 homedir-polyfill@^1.0.1:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/homedir-polyfill/-/homedir-polyfill-1.0.3.tgz#743298cef4e5af3e194161fbadcc2151d3a058e8"

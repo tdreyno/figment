@@ -79,7 +79,7 @@
     "lint-staged": "^10.2.11",
     "prettier": "^2.0.5",
     "semantic-release": "^17.0.8",
-    "terser": "^4.7.0",
+    "terser": "^4.8.0",
     "ts-jest": "^25.5.1",
     "ts-toolbelt": "^6.9.4",
     "typescript": "^3.9.5"

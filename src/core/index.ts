@@ -5,6 +5,7 @@ export const isUndefined = (data: unknown): data is undefined =>
 
 export const isNull = (data: unknown): data is null => data === null
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export const isFunction = (data: unknown): data is Function =>
   typeof data === "function"
 
@@ -184,6 +185,7 @@ export const withDefault = <T>(fallback: () => T) => (
   value: T | undefined,
 ): T => (isUndefined(value) ? fallback() : value) as Exclude<T, undefined>
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export const isA = <K extends Function>(klass: K) => (
   value: unknown,
 ): value is K => value instanceof klass

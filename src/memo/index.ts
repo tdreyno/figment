@@ -20,7 +20,7 @@ import {
   Recur,
 } from "../core/index"
 
-const mutableObjectCache = new Map<object | any[], string>()
+const mutableObjectCache = new Map<Record<string, unknown> | any[], string>()
 const cacheGet = (key: any) => mutableObjectCache.get(key)
 const cacheSet = <V extends string>(value: V) => (key: any): V =>
   mutableObjectCache.set(key, value) && value
